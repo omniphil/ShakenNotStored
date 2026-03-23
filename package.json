@@ -1,0 +1,13 @@
+{
+  "name": "shaken-not-stored",
+  "version": "1.0.0",
+  "description": "Self-destructing secret message sharing — RAM only, never written to disk",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "helmet": "^8.1.0"
+  }
+}
