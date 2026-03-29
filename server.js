@@ -111,6 +111,7 @@ app.use(helmet({
       objectSrc: ["'none'"]
     }
   },
+  frameguard: { action: 'deny' },
   crossOriginOpenerPolicy: { policy: 'same-origin' },
   crossOriginResourcePolicy: { policy: 'same-origin' },
   hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
