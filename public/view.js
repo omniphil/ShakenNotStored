@@ -1,3 +1,5 @@
+const revealPromptEl = document.getElementById('reveal-prompt');
+const revealBtn = document.getElementById('revealBtn');
 const loadingEl = document.getElementById('loading');
 const notFoundEl = document.getElementById('not-found');
 const secretDisplayEl = document.getElementById('secret-display');
@@ -5,7 +7,11 @@ const messageContentEl = document.getElementById('message-content');
 const secretId = window.location.pathname.split('/s/')[1];
 const encryptionKey = window.location.hash.slice(1);
 
-void loadSecret();
+revealBtn.addEventListener('click', () => {
+  revealPromptEl.style.display = 'none';
+  loadingEl.style.display = 'block';
+  loadSecret();
+});
 
 async function loadSecret() {
   try {

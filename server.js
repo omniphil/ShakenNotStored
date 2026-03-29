@@ -104,7 +104,7 @@ app.use(helmet({
       formAction: ["'none'"],
       frameAncestors: ["'none'"],
       scriptSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'"],
       imgSrc: ["'self'"],
       connectSrc: ["'self'"],
       frameSrc: ["'none'"],
@@ -113,7 +113,7 @@ app.use(helmet({
   },
   crossOriginOpenerPolicy: { policy: 'same-origin' },
   crossOriginResourcePolicy: { policy: 'same-origin' },
-  hsts: { maxAge: 31536000, includeSubDomains: true },
+  hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
   referrerPolicy: { policy: 'no-referrer' }
 }));
 app.use(express.json({ limit: '4kb' }));
