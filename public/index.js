@@ -76,7 +76,7 @@ function handleFile(file) {
   selectedFile = file;
   fileNameEl.textContent = file.name;
   fileSizeEl.textContent = formatSize(file.size);
-  dropPrompt.style.display = 'none';
+  dropPrompt.classList.add('hidden');
   filePreview.classList.add('visible');
 }
 
@@ -85,7 +85,7 @@ function clearFile() {
   fileInput.value = '';
   fileErrorEl.textContent = '';
   filePreview.classList.remove('visible');
-  dropPrompt.style.display = 'flex';
+  dropPrompt.classList.remove('hidden');
 }
 
 function formatSize(bytes) {
@@ -168,8 +168,8 @@ async function createSecret() {
 
     secretUrlEl.value = `${window.location.origin}${data.url}#${key}`;
     resultEl.classList.add('visible');
-    inputCardEl.style.display = 'none';
-    featuresEl.style.display = 'none';
+    inputCardEl.classList.add('hidden');
+    featuresEl.classList.add('hidden');
   } catch {
     alert('Failed to create secret. Please try again.');
   } finally {
@@ -195,7 +195,7 @@ function resetForm() {
   charCountEl.textContent = '0';
   secretUrlEl.value = '';
   resultEl.classList.remove('visible');
-  inputCardEl.style.display = 'block';
-  featuresEl.style.display = 'grid';
+  inputCardEl.classList.remove('hidden');
+  featuresEl.classList.remove('hidden');
   clearFile();
 }

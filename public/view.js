@@ -15,8 +15,8 @@ const encryptionKey = window.location.hash.slice(1);
 let pendingFileData = null;
 
 revealBtn.addEventListener('click', () => {
-  revealPromptEl.style.display = 'none';
-  loadingEl.style.display = 'block';
+  revealPromptEl.classList.add('hidden');
+  loadingEl.classList.add('visible');
   loadSecret();
 });
 
@@ -56,10 +56,10 @@ function downloadFile(fileData) {
 async function loadSecret() {
   try {
     const res = await fetch(`/api/secrets/${secretId}`, { cache: 'no-store' });
-    loadingEl.style.display = 'none';
+    loadingEl.classList.remove('visible');
 
     if (!res.ok) {
-      notFoundEl.style.display = 'block';
+      notFoundEl.classList.add('visible');
       return;
     }
 
@@ -71,7 +71,7 @@ async function loadSecret() {
         : data.message;
     } catch {
       messageContentEl.textContent = '[Unable to decrypt - invalid or missing key]';
-      secretDisplayEl.style.display = 'block';
+      secretDisplayEl.classList.add('visible');
       return;
     }
 
@@ -87,24 +87,25 @@ async function loadSecret() {
     // Display text
     if (envelope.text) {
       messageContentEl.textContent = envelope.text;
-      textSection.style.display = 'block';
+      textSection.classList.add('visible');
     } else {
-      textSection.style.display = 'none';
+      textSection.classList.add('hidden');
     }
 
-    // Display file
+    // Display file only if present
     if (envelope.file) {
       pendingFileData = envelope.file;
       dlFileName.textContent = envelope.file.name || 'file';
       const approxSize = Math.round(envelope.file.data.length * 3 / 4);
       dlFileSize.textContent = formatSize(approxSize);
-      fileSection.style.display = 'block';
+      fileSection.classList.remove('hidden');
+      fileSection.classList.add('visible');
     }
 
-    secretDisplayEl.style.display = 'block';
+    secretDisplayEl.classList.add('visible');
   } catch {
-    loadingEl.style.display = 'none';
-    notFoundEl.style.display = 'block';
+    loadingEl.classList.remove('visible');
+    notFoundEl.classList.add('visible');
   }
 }
 
