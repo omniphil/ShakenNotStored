@@ -10,10 +10,18 @@ app.set('trust proxy', 1); // trust Apache's X-Forwarded-For for real client IPs
 const PORT = process.env.PORT || 3000;
 const SECRET_TTL = 24 * 60 * 60 * 1000; // 24 hours
 const MAX_SECRETS = 10000; // cap total secrets in memory
-const SECRET_ID_RE = /^[a-f0-9]{128}$/;
+const SECRET_ID_RE = /^[a-f0-9]{32}$/;
+const MAX_MESSAGE_LENGTH = 50_000_000; // ~50MB base64 ciphertext
+const MAX_TOTAL_BYTES = 750_000_000; // ~1.5GB RAM (JS strings are UTF-16)
+const MAX_FILE_BYTES_PER_IP = 100 * 1024 * 1024; // 100MB per IP per hour
+const IP_BYTES_WINDOW = 60 * 60 * 1000; // 1 hour
 
 // In-memory store — never touches disk
 const secrets = new Map();
+let totalStoredBytes = 0;
+
+// Per-IP byte tracking for file uploads
+const ipBytesUsed = new Map();
 
 // Rate limiting — per IP, in memory
 const rateLimits = new Map();
@@ -51,6 +59,20 @@ function checkGlobalRate() {
   return globalCreates.count <= GLOBAL_RATE_MAX;
 }
 
+function checkIpBytes(ip, bytes) {
+  const now = Date.now();
+  const entry = ipBytesUsed.get(ip);
+  if (!entry || now - entry.windowStart > IP_BYTES_WINDOW) {
+    ipBytesUsed.set(ip, { windowStart: now, bytes });
+    return true;
+  }
+  if (entry.bytes + bytes > MAX_FILE_BYTES_PER_IP) {
+    return false;
+  }
+  entry.bytes += bytes;
+  return true;
+}
+
 function checkFailedLookup(ip) {
   const now = Date.now();
   const entry = failedLookups.get(ip);
@@ -80,6 +102,7 @@ const cleanupInterval = setInterval(() => {
   const now = Date.now();
   for (const [id, secret] of secrets) {
     if (now - secret.createdAt > SECRET_TTL) {
+      totalStoredBytes -= secret.message.length;
       secrets.delete(id);
     }
   }
@@ -91,6 +114,11 @@ const cleanupInterval = setInterval(() => {
   for (const [ip, entry] of failedLookups) {
     if (now - entry.windowStart > FAILED_LOOKUP_WINDOW) {
       failedLookups.delete(ip);
+    }
+  }
+  for (const [ip, entry] of ipBytesUsed) {
+    if (now - entry.windowStart > IP_BYTES_WINDOW) {
+      ipBytesUsed.delete(ip);
     }
   }
 }, 5 * 60 * 1000);
@@ -117,7 +145,7 @@ app.use(helmet({
   hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
   referrerPolicy: { policy: 'no-referrer' }
 }));
-app.use(express.json({ limit: '4kb' }));
+app.use(express.json({ limit: '50mb' }));
 app.use((req, res, next) => {
   applyNoStore(res);
   next();
@@ -135,7 +163,7 @@ app.post('/api/secrets', (req, res) => {
   }
 
   if (secrets.size >= MAX_SECRETS) {
-    return res.status(503).json({ error: 'Server is at capacity. Please try again later.' });
+    return res.status(503).json({ error: 'The server is at capacity. Secrets expire within 24 hours — please try again later.' });
   }
 
   const { message } = req.body;
@@ -144,16 +172,25 @@ app.post('/api/secrets', (req, res) => {
     return res.status(400).json({ error: 'Message is required' });
   }
 
-  if (message.length > 2048) {
+  if (message.length > MAX_MESSAGE_LENGTH) {
     return res.status(400).json({ error: 'Message too long' });
   }
 
-  const id = crypto.randomBytes(64).toString('hex');
+  if (totalStoredBytes + message.length > MAX_TOTAL_BYTES) {
+    return res.status(503).json({ error: 'The server is at capacity. Secrets expire within 24 hours — please try again later.' });
+  }
+
+  if (!checkIpBytes(ip, message.length)) {
+    return res.status(429).json({ error: 'Upload limit exceeded. Try again in an hour.' });
+  }
+
+  const id = crypto.randomBytes(16).toString('hex');
 
   secrets.set(id, {
     message: message,
     createdAt: Date.now()
   });
+  totalStoredBytes += message.length;
 
   res.status(201).json({ id, url: `/s/${id}` });
 });
@@ -177,6 +214,7 @@ app.get('/api/secrets/:id', (req, res) => {
 
   // Read then immediately delete
   const message = secret.message;
+  totalStoredBytes -= message.length;
   secrets.delete(id);
 
   res.json({ message });
@@ -210,6 +248,8 @@ function terminateQuietly() {
   secrets.clear();
   rateLimits.clear();
   failedLookups.clear();
+  ipBytesUsed.clear();
+  totalStoredBytes = 0;
 
   if (server) {
     server.close(() => process.exit(1));
@@ -232,7 +272,7 @@ process.on('SIGTERM', terminateQuietly);
 
 const server = app.listen(PORT, '127.0.0.1');
 server.headersTimeout = 15 * 1000;
-server.requestTimeout = 15 * 1000;
+server.requestTimeout = 120 * 1000;
 server.keepAliveTimeout = 5 * 1000;
 server.maxRequestsPerSocket = 100;
 server.on('clientError', socket => {

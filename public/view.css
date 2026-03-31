@@ -74,7 +74,7 @@ header a {
 
 button {
   width: auto;
-  padding: 0.9rem 2rem;
+  padding: 0.6rem 1.5rem;
   background: var(--accent);
   color: #fff;
   border: none;
@@ -112,6 +112,53 @@ button:hover { background: #7b73ff; }
   line-height: 1.6;
   max-height: 400px;
   overflow-y: auto;
+}
+
+/* File download */
+.file-download-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.file-icon {
+  font-size: 2rem;
+}
+
+.file-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.file-info .file-name {
+  font-size: 0.95rem;
+  color: var(--text);
+  word-break: break-all;
+}
+
+.file-info .file-size {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+#file-section {
+  margin-top: 1rem;
+}
+
+#file-section label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
 }
 
 .destroyed-notice {

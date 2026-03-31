@@ -22,8 +22,21 @@
       <div id="loading">Retrieving secret...</div>
 
       <div id="secret-display">
-        <label>Secret Message</label>
-        <div class="message-content" id="message-content"></div>
+        <div id="text-section">
+          <label>Secret Message</label>
+          <div class="message-content" id="message-content"></div>
+        </div>
+        <div id="file-section" style="display:none;">
+          <label>Attached File</label>
+          <div class="file-download-card">
+            <span class="file-icon">&#128196;</span>
+            <div class="file-info">
+              <span class="file-name" id="dl-file-name"></span>
+              <span class="file-size" id="dl-file-size"></span>
+            </div>
+            <button id="downloadBtn" type="button">Download</button>
+          </div>
+        </div>
         <div class="destroyed-notice">This message has been destroyed from the server.</div>
       </div>
 
