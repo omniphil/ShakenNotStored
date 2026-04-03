@@ -70,7 +70,7 @@ header p {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 1.5rem;
+  padding: 1.5rem 1.5rem 1rem;
   margin-bottom: 1.5rem;
 }
 
@@ -114,7 +114,7 @@ button {
   width: auto;
   padding: 0.6rem 1.5rem;
   display: block;
-  margin: -0.3rem auto 0;
+  margin: 1rem auto 0;
   background: var(--accent);
   color: #fff;
   border: none;
@@ -224,7 +224,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 .drop-zone {
   border: 2px dashed var(--border);
   border-radius: 8px;
-  padding: 1.25rem;
+  padding: 0.5rem;
   text-align: center;
   margin: 0.75rem 0 0;
   transition: border-color 0.2s, background 0.2s;
